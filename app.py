@@ -21,7 +21,7 @@ app = FastAPI(title="Precio de casas en California")
 class HouseFeatures(BaseModel):
     """Variables de entrada del modelo (una zona censal)."""
     MedInc: float
-    HouseAge: float
+    HouseAge: None
     AveRooms: float
     AveBedrms: float
     Population: float
