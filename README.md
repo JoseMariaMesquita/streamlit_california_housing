@@ -59,7 +59,7 @@ Autores: SanchezL, MesquitaJ
 
 ## Documentación de la API
 
-URL base: <https://TU-SERVICIO-API.onrender.com>
+URL base: <https://streamlit-california-housing.onrender.com/>
 
 | Método | Ruta | Descripción |
 |--------|------|-------------|
