@@ -1,142 +1,78 @@
-Aplicación Streamlit para el precio de casas en California
+# Aplicación Streamlit para el precio de casas en California
 
-Esta aplicación permite estimar el precio medio de las viviendas en California mediante un modelo de inteligencia artificial.
-El proyecto está formado por dos servicios: una API desarrollada con FastAPI y una interfaz web desarrollada con Streamlit.
-El usuario introduce dos variables: el ingreso medio de la zona y el número medio de habitaciones por vivienda.
-Las seis variables restantes se completan automáticamente con valores predeterminados.
-La interfaz comprueba que estén presentes las ocho variables necesarias antes de enviar la petición.
-A continuación, realiza una petición HTTP POST al endpoint /predict de la API.
-La API procesa los datos con el modelo de predicción y devuelve el valor estimado de la vivienda.
-Finalmente, Streamlit transforma el resultado a dólares y lo muestra en pantalla.
-La aplicación también controla los errores de comunicación y las respuestas HTTP de error de la API.
+Esta aplicación estima el precio medio de las viviendas de una zona censal de California a partir de un modelo de machine learning. El usuario introduce dos datos (ingreso medio de la zona y número medio de habitaciones por vivienda); la aplicación completa las otras seis variables con valores por defecto, comprueba que están las 8 que necesita el modelo y consulta la API.
 
-Autores: <nombre1>, <nombre2>
+Está formada por dos servicios:
 
-Servicios desplegados en Render
-Servicio	Qué es	URL
-API	FastAPI con el modelo de predicción (app.py)	https://tu-servicio-api.onrender.com
-Interfaz	Aplicación Streamlit (streamlit_app.py) que llama a la API	https://tu-servicio-streamlit.onrender.com
+- **API (FastAPI, `app.py`)**: carga `modelo_california.pkl` y expone el endpoint `POST /predict`.
+- **Interfaz (Streamlit, `streamlit_app.py`)**: recoge los datos, los valida y llama a la API por HTTP. Convierte la respuesta (cientos de miles de dólares) a dólares y gestiona los errores con mensajes claros.
 
-Importante: sustituye las URL de ejemplo por las direcciones reales de tus servicios en Render.
+La interfaz se conecta a la API mediante la URL configurada en `API_URL` (o en la barra lateral de la aplicación).
 
-Cómo ejecutarla en local
-1. Instalar las dependencias
+Autores: SanchezL, MesquitaJ
 
-Abre una terminal en la carpeta del proyecto y ejecuta:
+## Servicios desplegados en Render
 
-bash
-pip install -r requirements.txt
+| Servicio | Qué es | URL |
+|----------|--------|-----|
+| API | FastAPI con el modelo (`app.py`) | https://TU-SERVICIO-API.onrender.com |
+| Interfaz | Streamlit (`streamlit_app.py`), que llama a la API | https://TU-SERVICIO-STREAMLIT.onrender.com |
 
-2. Arrancar la API
+> En el plan gratuito de Render los servicios se duermen por inactividad: la primera petición puede tardar más de un minuto.
 
-Abre una primera terminal y ejecuta:
+## Cómo ejecutarla en local
 
-bash
-uvicorn app:app --reload
+1. Instala las dependencias:
 
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-La API estará disponible en:
+2. En una terminal, arranca la API (necesita `modelo_california.pkl` en la misma carpeta):
 
-API: http://localhost:8000
-Documentación interactiva: http://localhost:8000/docs
-3. Arrancar la interfaz Streamlit
+   ```bash
+   uvicorn app:app --reload
+   ```
 
-Abre una segunda terminal, en la misma carpeta del proyecto, y ejecuta:
+   Queda en http://localhost:8000 (documentación interactiva en `/docs`).
 
-bash
-streamlit run streamlit_app.py
+3. En otra terminal, arranca la interfaz:
 
+   ```bash
+   streamlit run streamlit_app.py
+   ```
 
-La interfaz estará disponible normalmente en http://localhost:8501.
+4. En la barra lateral de la aplicación, escribe `http://localhost:8000` como **URL de la API**.
 
-En la barra lateral de Streamlit, introduce esta URL para conectar con la API local:
+## Despliegue en Render
 
-text
-http://localhost:8000
+**API (Web Service)**
 
+- Build Command: `pip install -r requirements.txt`
+- Start Command: `uvicorn app:app --host 0.0.0.0 --port $PORT`
 
-Ambos servicios deben estar en funcionamiento para que la aplicación pueda realizar predicciones.
+**Interfaz (Web Service)**
 
-Despliegue en Render
+- Build Command: `pip install -r requirements.txt`
+- Start Command: `streamlit run streamlit_app.py --server.port $PORT --server.address 0.0.0.0`
+- URL de la API: se cambia en la constante `API_URL` de `streamlit_app.py` (debe ser la URL pública del servicio API) o, sin tocar código, en el campo "URL de la API" de la barra lateral.
 
-El proyecto se despliega mediante dos servicios web independientes.
+## Documentación de la API
 
-1. Servicio API (FastAPI)
+URL base: <https://TU-SERVICIO-API.onrender.com>
 
-Build Command:
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| GET | `/` | Health-check: devuelve `{"status": "ok"}` |
+| POST | `/predict` | Estima el precio medio de las viviendas |
 
-bash
-pip install -r requirements.txt
+### `POST /predict`
 
+Recibe un JSON con las 8 variables numéricas del modelo (una zona censal) y devuelve `MedHouseVal`, el precio medio estimado en cientos de miles de dólares.
 
-Start Command:
+**Ejemplo de petición**
 
-bash
-uvicorn app:app --host 0.0.0.0 --port $PORT
-
-
-Una vez desplegada, copia la URL pública que proporciona Render.
-
-2. Servicio de interfaz (Streamlit)
-
-Build Command:
-
-bash
-pip install -r requirements.txt
-
-
-Start Command:
-
-bash
-streamlit run streamlit_app.py --server.port $PORT --server.address 0.0.0.0 --server.headless true
-
-3. Conectar la interfaz con la API desplegada
-
-En streamlit_app.py, busca la variable API_URL y sustituye la dirección local por la URL pública de la API:
-
-python
-API_URL = "https://tu-servicio-api.onrender.com"
-
-
-Sustituye tu-servicio-api por el nombre real del servicio de FastAPI en Render.
-
-También puedes introducir la URL de la API desde la barra lateral de Streamlit.
-
-Importante: la interfaz debe utilizar la URL pública de la API cuando esté desplegada. No debe utilizar localhost:8000, porque en Render cada servicio se ejecuta de forma independiente.
-
-Documentación de la API
-
-URL base local: http://localhost:8000
-
-URL base desplegada: https://tu-servicio-api.onrender.com
-
-Sustituye la URL desplegada por la dirección real de tu API.
-
-POST /predict
-
-Este endpoint recibe una petición JSON con las ocho variables necesarias para estimar el precio medio de las viviendas en una zona de California. Si los datos son válidos, devuelve el valor estimado en cientos de miles de dólares, que la interfaz convierte posteriormente a dólares.
-
-Variables de entrada
-Variable	Descripción	Valor utilizado por la aplicación
-MedInc	Ingreso medio de la zona	Introducido por el usuario
-HouseAge	Antigüedad media de las viviendas	29.0
-AveRooms	Número medio de habitaciones por vivienda	Introducido por el usuario
-AveBedrms	Número medio de dormitorios por vivienda	1.05
-Population	Población de la zona	1166.0
-AveOccup	Número medio de ocupantes por vivienda	2.8
-Latitude	Latitud de la zona	34.26
-Longitude	Longitud de la zona	-118.49
-Ejemplo de petición
-
-Método: POST
-
-Endpoint: /predict
-
-Cabecera: Content-Type: application/json
-
-Cuerpo JSON:
-
-json
+```json
 {
   "MedInc": 3.5,
   "HouseAge": 29.0,
@@ -147,78 +83,24 @@ json
   "Latitude": 34.26,
   "Longitude": -118.49
 }
+```
 
+**Ejemplo de respuesta correcta (200)**
 
-La petición también se puede probar con curl:
-
-bash
-curl -X POST "http://localhost:8000/predict" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "MedInc": 3.5,
-    "HouseAge": 29.0,
-    "AveRooms": 5.2,
-    "AveBedrms": 1.05,
-    "Population": 1166.0,
-    "AveOccup": 2.8,
-    "Latitude": 34.26,
-    "Longitude": -118.49
-  }'
-
-Ejemplo de respuesta correcta (200)
-
-Si la API devuelve un valor de 4.53, la respuesta será:
-
-json
+```json
 {
-  "MedHouseVal": 4.53
+  "MedHouseVal": 1.8437
 }
+```
 
+Equivale a 1,8437 × 100 000 = **$184 370**.
 
-Interpretación: el valor 4.53 representa 453.000 dólares, ya que el modelo expresa el resultado en cientos de miles de dólares.
+**Errores**
 
-La interfaz Streamlit realiza la conversión y muestra:
+| Código | Cuándo ocurre | Qué muestra la aplicación |
+|--------|---------------|---------------------------|
+| 422 | Falta un campo o tiene un tipo incorrecto | "Error de la API (HTTP 422). Detalle: …" con el cuerpo devuelto por la API, que indica el campo problemático. Normalmente la validación local lo evita: "Faltan variables obligatorias: …" |
+| 500 | Error interno de la API (por ejemplo, fallo del modelo) | "Error de la API (HTTP 500). Detalle: …" con el texto de la respuesta (puede no ser JSON) |
+| Sin respuesta | La API no está disponible o tarda más de 90 s | "No se pudo contactar con la API. Comprueba que el servicio está en marcha y que la URL es correcta…", con aviso de que Render puede estar arrancando |
 
-text
-Precio estimado: $453,000
-
-
-Nota: el valor 4.53 es un ejemplo ilustrativo. Para documentar una ejecución real, sustitúyelo por el resultado obtenido al realizar una petición a tu API.
-
-Errores
-Código	Cuándo ocurre	Qué muestra la aplicación
-200	La predicción se realiza correctamente.	El precio estimado formateado en dólares.
-422	Falta una variable obligatoria o algún dato tiene un tipo incorrecto.	El código HTTP y el detalle devuelto por la API.
-500	Se produce un error interno en el servidor.	El código HTTP y el texto del error, sin intentar interpretarlo como JSON.
-Sin respuesta HTTP	La API no está disponible, la URL es incorrecta o se agota el tiempo de espera.	Un mensaje que recomienda comprobar la URL, el estado del servicio e intentarlo de nuevo.
-Validación y pruebas de errores
-
-La aplicación incluye opciones en la barra lateral para comprobar la validación de los datos y el tratamiento de errores.
-
-Prueba 1: validación local
-
-Activa la casilla «Prueba: omitir HouseAge de la petición» y pulsa «Estimar precio».
-
-La aplicación detecta que falta la variable HouseAge, muestra un mensaje de error y no envía la petición a la API.
-
-Prueba 2: respuesta HTTP 422
-
-Activa simultáneamente las casillas:
-
-«Prueba: omitir HouseAge de la petición».
-«Prueba: saltar la validación local (provoca un 422 de la API)».
-
-La aplicación envía una petición incompleta. La API debería responder con HTTP 422, y Streamlit muestra el código de error junto con el detalle devuelto.
-
-Prueba 3: fallo de comunicación
-
-Introduce una URL incorrecta en el campo «URL de la API» de la barra lateral y pulsa «Estimar precio».
-
-La aplicación captura el fallo de comunicación y muestra un mensaje claro al usuario, sin interrumpir la ejecución con una excepción sin controlar.
-
-Tecnologías utilizadas
-Python: lenguaje de programación.
-FastAPI: desarrollo de la API de predicción.
-Streamlit: interfaz web interactiva.
-Requests: comunicación HTTP entre Streamlit y FastAPI.
-Render: despliegue de ambos servicios.
+Todos los errores se registran además en el log de la aplicación (`logging`).
